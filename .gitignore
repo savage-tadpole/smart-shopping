@@ -1,0 +1,10 @@
+node_modules
+public/bower_components/
+public/js
+public/css
+
+# Editor-specific files
+.idea
+
+
+.DS_Store
