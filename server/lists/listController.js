@@ -123,16 +123,16 @@ module.exports = {
     var findItem = Q.nbind(Item.findOne, Item);
 
     findItem({name: name})
-    .then(function(match) {
-      findUser({username: username})
-      .then(function(user) {
-        User.findByIdAndUpdate(
-          user._id,
-          ($pull: {'list': match._id}),
-          {safe: true, upsert: true},
-          function(err, model) {
-            if(err) console.error(err);
-          }
+      .then(function(match) {
+        findUser({username: username})
+        .then(function(user) {
+          User.findByIdAndUpdate(
+            user._id,
+            {$pull: {'list': match._id}},
+            {safe: true, upsert: true},
+            function(err, model) {
+              if(err) console.error(err);
+            }
         );
         res.send(user.list);   
       })
@@ -144,6 +144,47 @@ module.exports = {
         if (err) {
           console.error(err);
           res.status(500).send({ error: 'Server Error'});
+        }
+      });
+    });
+  },
+
+  addItemToArchive: function(req, res) {
+  var username = iterimUsername;
+
+  var item = new Item({
+    name: req.body.name
+    data: {
+      frequency: req.body.frequency,
+      coupons: ['none'],
+      food_category: 'none',
+      expiration: new Date(2015,8,16)
+    }
+  });
+  var findItem = Q.nbind(Item.findOne, Item);
+  var findUser = Q.nbind(User.findOne, User);
+
+  findItem({name: item.name})
+    .then(function(match) {
+      findUser({username: username})
+      .then(function(user) {
+        User.findByIdAndUpdate({
+          user._id,
+          {$pull: {'list': match._id}, $push: {'past_items': match._id}},
+          {safe: true, upsert:true },
+          function(err, model) {
+            if (err) console.error(err);
+          }
+        })
+      })
+      .catch(function(err) {
+        console.error(err);
+        res.status(500).send({ error: 'Server error' })
+        })
+      .done(function(err) {
+        if (err) {
+          console.error(err);
+          res.status(500).send({ error: 'Server error'});
         }
       });
     });
