@@ -110,7 +110,7 @@ module.exports = {
     var name = req.body.name
     var frequency = req.body.frequency;
     var item = new Item({
-      name: name
+      name: name,
       data: {
         frequency: frequency,
         coupons: ['none'],
@@ -153,7 +153,7 @@ module.exports = {
   var username = iterimUsername;
 
   var item = new Item({
-    name: req.body.name
+    name: req.body.name,
     data: {
       frequency: req.body.frequency,
       coupons: ['none'],
@@ -168,14 +168,14 @@ module.exports = {
     .then(function(match) {
       findUser({username: username})
       .then(function(user) {
-        User.findByIdAndUpdate({
+        User.findByIdAndUpdate(
           user._id,
           {$pull: {'list': match._id}, $push: {'past_items': match._id}},
           {safe: true, upsert:true },
           function(err, model) {
             if (err) console.error(err);
           }
-        })
+        )
       })
       .catch(function(err) {
         console.error(err);
