@@ -1,9 +1,9 @@
-var Q = require('q');
-var mongoose = require('mongoose');
-var models = require('../../db/database.js');
-var Item = mongoose.model('Item', models.item);
-var User = mongoose.model('User', models.user);
-var interimUsername = 'emily'
+var Q = require('q'),
+  mongoose = require('mongoose'),
+  models = require('../../db/database.js'),
+  Item = mongoose.model('Item', models.item),
+  User = mongoose.model('User', models.user),
+  interimUsername = 'emily';
 
 
 module.exports = {
@@ -32,21 +32,22 @@ module.exports = {
       if (err) console.error(err);
       res.send(user.list);
     })
-  },
+  };
 
   addItem: function(req, res) {
     var username = interimUsername;
-    var name = req.body.name;
-    var frequency = req.body.frequency;
-    var item = new Item({
-      name: name,
-      data: {
-        frequency: frequency,
-        coupons: ['none'],
-        food_category: 'none',
-        expiration: new Date(2015,8,16)
-      }
-    });
+        name = req.body.name,
+        frequency = req.body.frequency,
+        item = new Item({
+          name: name,
+          data: {
+            frequency: frequency,
+            coupons: ['none'],
+            food_category: 'none',
+            expiration: new Date(2015,8,16)
+          }
+        });
+
     var createItem = Q.nbind(Item.create, Item);
     var findItem = Q.nbind(Item.findOne, Item);
     var findUser = Q.nbind(User.findOne, User);
@@ -103,7 +104,73 @@ module.exports = {
         res.status(500).send({ error: 'Server Error' });
       }
     });
-  }
+  },
 
-  // TODO: Update, Delete
-};
+  deleteItemFromList: function(req, res) {
+    var username = interimUsername,
+        itemId = req.params.id;
+
+    var findUser = Q.nbind(User.findOne, User);
+    var findItem = Q.nbind(Item.findOne, Item);
+
+    findItem({_id: itemId})
+    .then(function(match) {
+      findUser({username: username})
+      .then(function(user) {
+        User.findByIdAndUpdate(
+          user._id,
+          {$pull: {'list': match._id}},
+          {safe: true, upsert: true},
+          function(err, model) {
+            if(err) console.error(err);
+          }
+        );
+        res.send(user.list);   
+      })
+      .catch(function(err) {
+        console.error(err);
+        res.status(500).send({ error: 'Server Error' });
+      })
+      .done(function(err) {
+        if (err) {
+          console.error(err);
+          res.status(500).send({ error: 'Server Error'});
+        }
+      });
+    });
+  },
+
+  addItemToArchive: function(req, res) {
+    var username = interimUsername,
+        itemId = req.body.id;
+
+    var findItem = Q.nbind(Item.findOne, Item);
+    var findUser = Q.nbind(User.findOne, User);
+
+    findItem({_id: itemId})
+    .then(function(match) {
+      findUser({username: username})
+      .then(function(user) {
+        User.findByIdAndUpdate(
+          user._id,
+          {$pull: {'list': match._id}, $push: {'past_items': match._id}},
+          {safe: true, upsert:true },
+          function(err, model) {
+            if (err) console.error(err);
+          }
+        )
+        res.send(user.list)
+      })
+      .catch(function(err) {
+        console.error(err);
+        res.status(500).send({ error: 'Server error' })
+      })
+      .done(function(err) {
+        if (err) {
+          console.error(err);
+          res.status(500).send({ error: 'Server error'});
+        }
+      });
+    });
+  }
+}
