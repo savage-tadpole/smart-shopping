@@ -16,6 +16,12 @@ listController.createUser();
 
 app.use(bodyParser.json());
 //static files will be served from the public directory
+
+var firebaseAuth = require('./middleware/authFirebase');
+var session = require('express-session');
+var app = express();
+
+
 app.use(function (req, res, next) {
   var ts = new Date();
   console.log(req.url + ' - ' + req.method);
@@ -23,10 +29,23 @@ app.use(function (req, res, next) {
   next();
 });
 
+
 app.use(express.static(__dirname + '/../public'));
 
 app.get('/api/list', listController.getList);
 app.post('/api/item/add', listController.addItem); 
+
+//creates sessions 
+app.use(session({
+  secret: 'savage tadpole',
+  resave: false,
+  saveUninitialized: true
+}))
+
+//static files will be served from the public directory
+app.use(express.static('public'));
+
+
 
 //server is listening on port 3000
 var server = app.listen(3000, function () {

@@ -8,3 +8,5 @@ public/css
 
 
 .DS_Store
+
+firebaseSecret.js
