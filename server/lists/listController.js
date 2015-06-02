@@ -32,7 +32,7 @@ module.exports = {
       if (err) console.error(err);
       res.send(user.list);
     })
-  },
+  };
 
   addItem: function(req, res) {
     var username = interimUsername;
