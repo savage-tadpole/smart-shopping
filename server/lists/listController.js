@@ -1,9 +1,9 @@
-var Q = require('q');
-var mongoose = require('mongoose');
-var models = require('../../db/database.js');
-var Item = mongoose.model('Item', models.item);
-var User = mongoose.model('User', models.user);
-var interimUsername = 'emily'
+var Q = require('q'),
+  mongoose = require('mongoose'),
+  models = require('../../db/database.js'),
+  Item = mongoose.model('Item', models.item),
+  User = mongoose.model('User', models.user),
+  interimUsername = 'emily';
 
 
 module.exports = {
@@ -36,17 +36,18 @@ module.exports = {
 
   addItem: function(req, res) {
     var username = interimUsername;
-    var name = req.body.name;
-    var frequency = req.body.frequency;
-    var item = new Item({
-      name: name,
-      data: {
-        frequency: frequency,
-        coupons: ['none'],
-        food_category: 'none',
-        expiration: new Date(2015,8,16)
-      }
-    });
+        name = req.body.name,
+        frequency = req.body.frequency,
+        item = new Item({
+          name: name,
+          data: {
+            frequency: frequency,
+            coupons: ['none'],
+            food_category: 'none',
+            expiration: new Date(2015,8,16)
+          }
+        });
+
     var createItem = Q.nbind(Item.create, Item);
     var findItem = Q.nbind(Item.findOne, Item);
     var findUser = Q.nbind(User.findOne, User);
@@ -106,33 +107,23 @@ module.exports = {
   },
 
   deleteItemFromList: function(req, res) {
-    var username = iterimUsername;
-    var name = req.body.name
-    var frequency = req.body.frequency;
-    var item = new Item({
-      name: name,
-      data: {
-        frequency: frequency,
-        coupons: ['none'],
-        food_category: 'none',
-        expiration: new Date(2015,6,16)
-      }
-    });
+    var username = interimUsername,
+        itemId = req.params.id;
 
     var findUser = Q.nbind(User.findOne, User);
     var findItem = Q.nbind(Item.findOne, Item);
 
-    findItem({name: name})
-      .then(function(match) {
-        findUser({username: username})
-        .then(function(user) {
-          User.findByIdAndUpdate(
-            user._id,
-            {$pull: {'list': match._id}},
-            {safe: true, upsert: true},
-            function(err, model) {
-              if(err) console.error(err);
-            }
+    findItem({_id: itemId})
+    .then(function(match) {
+      findUser({username: username})
+      .then(function(user) {
+        User.findByIdAndUpdate(
+          user._id,
+          {$pull: {'list': match._id}},
+          {safe: true, upsert: true},
+          function(err, model) {
+            if(err) console.error(err);
+          }
         );
         res.send(user.list);   
       })
@@ -150,21 +141,13 @@ module.exports = {
   },
 
   addItemToArchive: function(req, res) {
-  var username = iterimUsername;
+    var username = interimUsername,
+        itemId = req.body.id;
 
-  var item = new Item({
-    name: req.body.name,
-    data: {
-      frequency: req.body.frequency,
-      coupons: ['none'],
-      food_category: 'none',
-      expiration: new Date(2015,8,16)
-    }
-  });
-  var findItem = Q.nbind(Item.findOne, Item);
-  var findUser = Q.nbind(User.findOne, User);
+    var findItem = Q.nbind(Item.findOne, Item);
+    var findUser = Q.nbind(User.findOne, User);
 
-  findItem({name: item.name})
+    findItem({_id: itemId})
     .then(function(match) {
       findUser({username: username})
       .then(function(user) {
@@ -176,11 +159,12 @@ module.exports = {
             if (err) console.error(err);
           }
         )
+        res.send(user.list)
       })
       .catch(function(err) {
         console.error(err);
         res.status(500).send({ error: 'Server error' })
-        })
+      })
       .done(function(err) {
         if (err) {
           console.error(err);
@@ -189,4 +173,4 @@ module.exports = {
       });
     });
   }
-};
+}
