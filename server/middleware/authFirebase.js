@@ -7,28 +7,25 @@ var FirebaseMakerFunction =  function() {
   this.ref = new Firebase(this.refString);
 };
 
-FirebaseMakerFunction.prototype.createUser = function(user, pass, cb){
+FirebaseMakerFunction.prototype.createUser = function(user, pass, request, response, next){
   //Works
   //create user 
   console.log('creating user');
   this.ref.createUser({
     email    : user,
     password : pass
-  }, function(error, authData, user, pass) {
+  }, function(error, authData) {
     if(error) { 
-      console.log("Creation Failed!", error);
+      console.log("User Creation Failed!", error);
+      response.send("User creation Failed!");
     }  else {
       console.log("Created user successfully with payload:", authData.uid);
-      console.log('user - ' + user);
-      console.log('pass - ' + pass);
-      cb();
+      this.signIn(user, pass, request, response, next);
     }
-  });
-
-
+  }.bind(this));
 };
 
-FirebaseMakerFunction.prototype.signIn = function(user, pass){
+FirebaseMakerFunction.prototype.signIn = function(user, pass, request, response, next){
   //works
   this.ref.authWithPassword({
     email    : user,
@@ -36,26 +33,32 @@ FirebaseMakerFunction.prototype.signIn = function(user, pass){
   }, function(error, authData) {
     if (error) {
       console.log("Login Failed!", error);
+      response.redirect('/testSignIn.html');
     } else {
       console.log("Authenticated successfully with payload:", authData);
-
+      console.log(Object.keys(request.session));
+      request.session.token = authData.token;
+      response.redirect('/testIndex.html');
     }
   });
 };
 
+FirebaseMakerFunction.prototype.validateUserToken = function(request, response, next){
+  if(request.session.token){
+    this.ref.authWithCustomToken(request.session.token, function(error, authData) {
+      if (error) {
+        console.log("Login Failed!", error);
+        response.redirect('/testSignIn.html');
+      } else {
+        console.log("Authenticated Token successfully with payload:", authData);
+        next();
+      }
+    });
+  } else {
+    response.redirect('/testSignIn.html');
+  }
+};
 
-var email = 'joe123456@gmail.com';
-var pass = 'password';
-
-console.log('creating fbase object');
 var firebaseObj = new FirebaseMakerFunction();
-console.log('invoking createUser');
-firebaseObj.createUser(email, pass).then()
 
-
-  console.log('user - ' + user);
-  console.log('pass - ' + pass);
-  firebaseObj.signIn(email, pass);
-
-
-exports.module = Firebase;
+module.exports = firebaseObj;
