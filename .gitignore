@@ -10,3 +10,5 @@ server/lists/config.js
 
 
 .DS_Store
+
+firebaseSecret.js
